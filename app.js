@@ -51,14 +51,21 @@ app.get('/books/:id', (req, res, next) => {
   }
 })
 app.post('/books', async (req, res, next) => {
-  const { name, author, type, publicationDate, raiting} = req.body
-  const createdBook = await Book.create({name, author, type, publicationDate, raiting})
-  res.status(201).json({
-    status: 'success',
-    data: {
-      createdBook
-    }
-  })
+  try{
+    const { name, author, type, publicationDate, raiting} = req.body
+    const createdBook = await Book.create({name, author, type, publicationDate, raiting})
+    res.status(201).json({
+      status: 'success',
+      data: {
+        createdBook
+      }
+    })
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: 'Invalid lesson '
+    })
+  }
 })
 
 app.delete('/books/:id', (req, res, next) => {
