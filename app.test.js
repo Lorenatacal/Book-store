@@ -30,7 +30,7 @@ describe('GET /books', () => {
 
 describe('POST /books', ()  => {
     describe('valid information', () => {
-        let res, createdId;
+        let res, createdId, numOfBooksBefore, numOfBooksAfter;
 
         const createdBook = {
             name: 'Effective Java',
@@ -41,9 +41,12 @@ describe('POST /books', ()  => {
         }
         beforeAll( async (done) => {
             const booksBefore = await Book.find({})
-            const numOfBooks = booksBefore.length;
+            numOfBooksBefore = booksBefore.length;
 
             res = await supertest(app).post('/books').send(createdBook)
+
+            const booksAfter = await Book.find({})
+            numOfBooksAfter = booksAfter.length
             done()
 
         })
@@ -61,14 +64,17 @@ describe('POST /books', ()  => {
         })
         test('the created book has an id', () => {
             expect(res.body.data.createdBook).toHaveProperty('_id')
+            createdId = res.body.data.createdBook._id
         })
-        test('a book with that id now exists in the database', () => {
+        test('a book with that id now exists in the database', async (done) => {
             const book = await Book.findById(createdId)
             expect(book).not.toBeNull()
+            expect(book.id).toContain(createdId)
+            done()
         })
-        // test('only one extra book exists in the database', () => {
-
-        // })
+        test('only one extra book exists in the database', () => {
+            expect(numOfBooksAfter).toEqual(numOfBooksBefore + 1)
+        })
     })
 })
 
