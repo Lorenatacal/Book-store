@@ -30,7 +30,7 @@ describe('GET /books', () => {
 
 describe('POST /books', ()  => {
     describe('valid information', () => {
-        let res;
+        let res, createdId;
 
         const createdBook = {
             name: 'Effective Java',
@@ -59,12 +59,13 @@ describe('POST /books', ()  => {
                 }
             })
         })
-        // test('the created book has an id', () => {
-
-        // })
-        // test('a book with that id now exists in the database', () => {
-
-        // })
+        test('the created book has an id', () => {
+            expect(res.body.data.createdBook).toHaveProperty('_id')
+        })
+        test('a book with that id now exists in the database', () => {
+            const book = await Book.findById(createdId)
+            expect(book).not.toBeNull()
+        })
         // test('only one extra book exists in the database', () => {
 
         // })
