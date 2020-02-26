@@ -1,6 +1,14 @@
 const supertest = require('supertest');
+const mongoose = require('mongoose')
 const app = require('./app');
 const database = require('./database');
+const Book = require('./models/books/Book.model')
+
+beforeAll(async(done) => {
+    const url = 'mongodb://127.0.0.1/Store'
+    await mongoose.connect(url, { useNewUrlParser: true })
+    done()
+})
 
 describe('GET /books', () => {
     let res
@@ -20,6 +28,49 @@ describe('GET /books', () => {
     })
 })
 
+describe('POST /books', ()  => {
+    describe('valid information', () => {
+        let res;
+
+        const createdBook = {
+            name: 'Effective Java',
+            author: 'Joshua Block',
+            type: 'Java Book',
+            publicationDate: 2003,
+            raiting: 4.9,
+        }
+        beforeAll( async (done) => {
+            const booksBefore = await Book.find({})
+            const numOfBooks = booksBefore.length;
+
+            res = await supertest(app).post('/books').send(createdBook)
+            done()
+
+        })
+
+        test('the response is 201', () => {
+            expect(res.status).toBe(201)
+        })
+        test('the response body sends back the created book', () => {
+            expect(res.body).toMatchObject({
+                status: 'success',
+                data: {
+                    createdBook
+                }
+            })
+        })
+        // test('the created book has an id', () => {
+
+        // })
+        // test('a book with that id now exists in the database', () => {
+
+        // })
+        // test('only one extra book exists in the database', () => {
+
+        // })
+    })
+})
+
 describe('DELETE /books/:id', () => {
     describe('valid id', () => {
         const idToDelete = 'as93'
@@ -33,7 +84,6 @@ describe('DELETE /books/:id', () => {
         })
 
         test('Some useful response sent back', async () => {
-            console.log(database, 'database')
             res = await supertest(app).delete(`/books/${idToDelete}`)
             expect(res.status).toBe(200);
             expect(res.body).toMatchObject({
@@ -41,10 +91,10 @@ describe('DELETE /books/:id', () => {
                 message: `Deleted ${idToDelete}`
             })
         })
-        test('Lesson has been removed', () => {
+        test('Book has been removed', () => {
             expect(database.books).not.toHaveProperty(idToDelete)
         })
-        test('Only that specific lesson has been deleted', () => {
+        test('Only that specific book has been deleted', () => {
             expect(Object.keys(database.books)).toHaveLength(1)
             expect(database.books).toHaveProperty('bs23')
         })

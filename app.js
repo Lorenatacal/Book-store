@@ -4,6 +4,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var database = require('./database');
+const Book = require('./models/books/Book.model')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -49,6 +50,16 @@ app.get('/books/:id', (req, res, next) => {
     })
   }
 })
+app.post('/books', async (req, res, next) => {
+  const { name, author, type, publicationDate, raiting} = req.body
+  const createdBook = await Book.create({name, author, type, publicationDate, raiting})
+  res.status(201).json({
+    status: 'success',
+    data: {
+      createdBook
+    }
+  })
+})
 
 app.delete('/books/:id', (req, res, next) => {
   const { id } = req.params
@@ -57,10 +68,6 @@ app.delete('/books/:id', (req, res, next) => {
     status: 'success',
     message: `Deleted ${id}`
   })
-})
-
-app.post('/books', (req, res, next) => {
-  res.status(201).send('Rich dad, poor dad')
 })
 
 // catch 404 and forward to error handler
