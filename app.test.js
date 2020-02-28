@@ -1,5 +1,5 @@
 const supertest = require('supertest');
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 const app = require('./app');
 const database = require('./database');
 const Book = require('./models/Book.model')

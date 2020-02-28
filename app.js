@@ -2,6 +2,7 @@ var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
 var logger = require('morgan');
 var database = require('./database');
 const Book = require('./models/Book.model')
@@ -10,6 +11,10 @@ const Customer = require('./models/Customer.model')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+
+const dotenv = require('dotenv')
+
+dotenv.config()
 
 var app = express();
 
@@ -53,7 +58,7 @@ app.get('/books/:id', (req, res, next) => {
   }
 })
 
-app.get('/protected', (req, res, next) => {
+app.get('/protected', async (req, res, next) => {
   const authHeader = req.headers.authorization
 
   if(!authHeader) {
@@ -61,8 +66,17 @@ app.get('/protected', (req, res, next) => {
       status: 'fail' 
     })
   } else {
+    const authToken = req.headers.authorization.replace('Bearer ', '')
+    console.log(process.env.JWT_SECRET)
+    const decodedId = jwt.verify(authToken, process.env.JWT_SECRET)
+    
+    const customer = await Customer.findById(decodedId)
+    
     res.status(200).json({
-      status: 'success'
+      status: 'success',
+      data: {
+        customer: customer
+      }
     })
   }
 })
