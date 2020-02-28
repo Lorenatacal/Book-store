@@ -2,7 +2,8 @@ const supertest = require('supertest');
 const mongoose = require('mongoose')
 const app = require('./app');
 const database = require('./database');
-const Book = require('./models/books/Book.model')
+const Book = require('./models/Book.model')
+const Customer = require('./models/Customer.model')
 
 beforeAll(async(done) => {
     const url = 'mongodb://127.0.0.1/Store'
@@ -18,10 +19,10 @@ describe('GET /books', () => {
         done()
     })
 
-    it('send a response with status code of 200', () => {
+    test('send a response with status code of 200', () => {
         expect(res.status).toBe(200)
     })
-    it('send back a body which is formatted following JSend guidelines', () => {
+    test('send back a body which is formatted following JSend guidelines', () => {
         expect(res.body).toMatchObject({
             status: 'success'
           })      
@@ -105,6 +106,41 @@ describe('DELETE /books/:id', () => {
             expect(Object.keys(database.books)).toHaveLength(1)
             expect(database.books).toHaveProperty('bs23')
         })
+    })
+})
+
+describe('Post /signup', () => {
+    let res
+
+    beforeAll(async (done) => {
+        res = await supertest(app).post('/signup').send({
+            email: 'hello@domain.com',
+            password: 'hjgdsdgah7836736vhgdcfdy36ere'
+        })
+        done()
+    })
+    test('sends a response with 201', () => {
+        expect(res.status).toBe(201)
+    })
+    test('sends back an autorhisation token', () => {
+        expect(typeof res.body.token).toBe('string')
+    })
+})
+
+describe('protected route', () => {
+    test('no token provided', async (done) => {
+        const res = await supertest(app).get('/protected')
+        expect(res.status).toBe(401)
+        done()
+    })
+    test('valid token provided', async (done) => {
+        const customer = await Customer.create({ email: 'data@hotmail.com', password: 'hgs6877' })
+        const token = customer.generateAuthToken()
+
+        const res = await supertest(app).get('/protected')
+        .set('Authorization', `Bearer ${token}`)
+        expect(res.status).toBe(200)
+        done()
     })
 })
  

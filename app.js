@@ -4,7 +4,9 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var database = require('./database');
-const Book = require('./models/books/Book.model')
+const Book = require('./models/Book.model')
+const BookShop = require('./models/BookShop.model')
+const Customer = require('./models/Customer.model')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -50,6 +52,52 @@ app.get('/books/:id', (req, res, next) => {
     })
   }
 })
+
+app.get('/protected', (req, res, next) => {
+  const authHeader = req.headers.authorization
+
+  if(!authHeader) {
+    res.status(401).json({ 
+      status: 'fail' 
+    })
+  } else {
+    res.status(200).json({
+      status: 'success'
+    })
+  }
+})
+
+app.post('/signup', async (req, res, next) => {
+  const {email, password} = req.body
+  const customer = await Customer.create({ email, password })
+
+  const token = customer.generateAuthToken()
+
+  res.status(201).json({
+    status: 'success',
+    token
+  })
+})
+
+app.post('/bookShop', async (req, res, next) => {
+  const { name, books } = req.body
+  const createBooks = books.map(async (bookDefinition) => {
+    return await Book.create(bookDefinition)
+  })
+  const createdBooks = await Promise.all(createBooks)
+
+  const createdBookShop = await BookShop.create({
+    name,
+    books: createdBooks.map(book => book._id)
+  })
+  res.status(201).json({
+    status: 'success',
+    data: {
+      bookShop: createdBookShop
+    }
+  })
+})
+
 app.post('/books', async (req, res, next) => {
   try{
     const { name, author, type, publicationDate, raiting} = req.body
